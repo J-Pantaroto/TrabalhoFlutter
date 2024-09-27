@@ -12,47 +12,85 @@ class Listar extends StatefulWidget {
 }
 
 class _ListarState extends State<Listar> {
+  bool _isHovered = false;
+  bool _isFabHovered = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Lista de Contatos'),
+        title: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.4),
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Text(
+            'Lista de Contatos',
+            style: TextStyle(
+              color: Colors.black, // Texto preto
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
       ),
       body: Listagem(controller: widget.controller),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => Cadastro(
-                controller: widget.controller,
+      floatingActionButton: MouseRegion(
+        onEnter: (_) => setState(() {
+          _isFabHovered = true;
+        }),
+        onExit: (_) => setState(() {
+          _isFabHovered = false;
+        }),
+        child: AnimatedScale(
+          scale: _isFabHovered ? 1.2 : 1.0,
+          duration: Duration(milliseconds: 200),
+          child: FloatingActionButton(
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => Cadastro(
+                    controller: widget.controller,
+                  ),
+                ),
+              );
+
+              if (result == true) {
+                setState(() {});
+              }
+            },
+            backgroundColor: Colors.white,
+            child: Text(
+              '+',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 24,
               ),
             ),
-          );
-
-          if (result == true) {
-            setState(() {});
-          }
-        },
-        child: Icon(Icons.add),
+          ),
+        ),
       ),
     );
   }
 }
 
-class Listagem extends StatefulWidget {
+class Listagem extends StatelessWidget {
   final ContatoController controller;
 
   Listagem({Key? key, required this.controller}) : super(key: key);
 
   @override
-  _ListagemState createState() => _ListagemState();
-}
-
-class _ListagemState extends State<Listagem> {
-  @override
   Widget build(BuildContext context) {
-    final contatos = widget.controller.getContatos();
+    final contatos = controller.getContatos();
 
     if (contatos.isEmpty) {
       return Center(child: Text('Nenhum contato cadastrado.'));
@@ -63,63 +101,117 @@ class _ListagemState extends State<Listagem> {
       itemBuilder: (context, index) {
         var contato = contatos[index];
 
-        return ListTile(
-          title: Text(contato.nome),
-          subtitle:
-              Text('Telefone: ${contato.telefone} - Email:${contato.email}'),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: Icon(Icons.edit, color: Colors.blue),
-                onPressed: () async {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Cadastro(
-                        controller: widget.controller,
-                        index: index,
-                      ),
-                    ),
-                  );
-                  if (result == true) {
-                    setState(() {}); // Atualiza a lista após edição
-                  }
-                },
+        return HoverContainer(
+          child: Container(
+            padding: EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  spreadRadius: 2,
+                  blurRadius: 4,
+                  offset: Offset(0, 3),
+                ),
+              ],
+              border: Border.all(
+                color: Colors.transparent,
+                width: 0,
               ),
-              IconButton(
-                icon: Icon(Icons.delete, color: Colors.red),
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: Text('Remover Contato'),
-                      content:
-                          Text('Tem certeza que deseja remover este contato?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: Text('Cancelar'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            setState(() {
-                              widget.controller.removerContato(index);
-                            });
-                            Navigator.pop(context); // Fecha o diálogo
-                          },
-                          child: Text('Remover',
-                              style: TextStyle(color: Colors.red)),
-                        ),
-                      ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  contato.nome,
+                  style: TextStyle(color: Colors.white, fontSize: 18),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  contato.telefone,
+                  style: TextStyle(color: Colors.white70),
+                ),
+                Text(
+                  contato.email,
+                  style: TextStyle(color: Colors.white70),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.edit, color: Colors.white),
+                      onPressed: () {},
                     ),
-                  );
-                },
-              ),
-            ],
+                    IconButton(
+                      icon: Icon(Icons.delete, color: Colors.white),
+                      onPressed: () {},
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       },
+    );
+  }
+}
+
+class HoverContainer extends StatefulWidget {
+  final Widget child;
+
+  HoverContainer({required this.child});
+
+  @override
+  _HoverContainerState createState() => _HoverContainerState();
+}
+
+class _HoverContainerState extends State<HoverContainer> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() {
+        _isHovered = true;
+      }),
+      onExit: (_) => setState(() {
+        _isHovered = false;
+      }),
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 200),
+        transform:
+            _isHovered ? Matrix4.identity().scaled(1.01) : Matrix4.identity(),
+        margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: _isHovered
+              ? [
+                  BoxShadow(
+                    color: const Color.fromARGB(255, 105, 107, 109)
+                        .withOpacity(0.4),
+                    spreadRadius: 3,
+                    blurRadius: 6,
+                    offset: Offset(0, 3),
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    spreadRadius: 2,
+                    blurRadius: 4,
+                    offset: Offset(0, 3),
+                  ),
+                ],
+          border: Border.all(
+            color: Colors.white.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+        child: widget.child,
+      ),
     );
   }
 }
