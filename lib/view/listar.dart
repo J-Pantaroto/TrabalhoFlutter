@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../controller/contato_controller.dart';
 import 'cadastro.dart';
+import '../model/contato.dart';
 
 class Listar extends StatefulWidget {
   final ContatoController controller;
@@ -12,7 +13,6 @@ class Listar extends StatefulWidget {
 }
 
 class _ListarState extends State<Listar> {
-  bool _isHovered = false;
   bool _isFabHovered = false;
 
   @override
@@ -35,7 +35,7 @@ class _ListarState extends State<Listar> {
           child: Text(
             'Lista de Contatos',
             style: TextStyle(
-              color: Colors.black, // Texto preto
+              color: Colors.black,
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
@@ -90,68 +90,94 @@ class Listagem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final contatos = controller.getContatos();
+    return FutureBuilder<List<Contato>>(
+      future: controller.getContatos(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Erro ao carregar contatos.'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(child: Text('Nenhum contato cadastrado.'));
+        }
 
-    if (contatos.isEmpty) {
-      return Center(child: Text('Nenhum contato cadastrado.'));
-    }
+        final contatos = snapshot.data!;
 
-    return ListView.builder(
-      itemCount: contatos.length,
-      itemBuilder: (context, index) {
-        var contato = contatos[index];
+        return ListView.builder(
+          itemCount: contatos.length,
+          itemBuilder: (context, index) {
+            var contato = contatos[index];
 
-        return HoverContainer(
-          child: Container(
-            padding: EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  spreadRadius: 2,
-                  blurRadius: 4,
-                  offset: Offset(0, 3),
-                ),
-              ],
-              border: Border.all(
-                color: Colors.transparent,
-                width: 0,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  contato.nome,
-                  style: TextStyle(color: Colors.white, fontSize: 18),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  contato.telefone,
-                  style: TextStyle(color: Colors.white70),
-                ),
-                Text(
-                  contato.email,
-                  style: TextStyle(color: Colors.white70),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.edit, color: Colors.white),
-                      onPressed: () {},
+            return HoverContainer(
+              child: Container(
+                padding: EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      spreadRadius: 2,
+                      blurRadius: 4,
+                      offset: Offset(0, 3),
                     ),
-                    IconButton(
-                      icon: Icon(Icons.delete, color: Colors.white),
-                      onPressed: () {},
+                  ],
+                  border: Border.all(
+                    color: Colors.transparent,
+                    width: 0,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      contato.nome,
+                      style: TextStyle(color: Colors.white, fontSize: 18),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      contato.telefone,
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                    Text(
+                      contato.email,
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.edit, color: Colors.white),
+                          onPressed: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => Cadastro(
+                                  controller: controller,
+                                  index: contato.id!, // Passa o ID do contato
+                                ),
+                              ),
+                            );
+
+                            if (result == true) {
+                              (context as Element).reassemble();
+                            }
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.delete, color: Colors.white),
+                          onPressed: () async {
+                            await controller.removerContato(contato.id!);
+                            (context as Element).reassemble();
+                          },
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );

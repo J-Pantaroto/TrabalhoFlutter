@@ -1,35 +1,26 @@
+import '../database/contato_database.dart';
 import '../model/contato.dart';
-import '../model/lista_contatos.dart';
 
 class ContatoController {
-  final ListaContatos _listaContatos;
+  final ContatoDatabase _contatoDatabase;
 
-  ContatoController(this._listaContatos) {
-    _inicializarContatos();
+  ContatoController(this._contatoDatabase);
+
+  Future<List<Contato>> getContatos() async {
+    return await _contatoDatabase.getContatos();
   }
 
-  void adicionarContato(Contato contato) {
-    _listaContatos.adicionarContato(contato);
+  Future<void> adicionarContato(Contato contato) async {
+    await _contatoDatabase.adicionarContato(contato);
   }
 
-  void editarContato(int index, Contato contato) {
-    _listaContatos.editarContato(index, contato);
+  Future<void> editarContato(Contato contato) async {
+    if (contato.id != null) {
+      await _contatoDatabase.editarContato(contato);
+    }
   }
 
-  void removerContato(int index) {
-    _listaContatos.removerContato(index);
-  }
-
-  List<Contato> getContatos() {
-    return _listaContatos.getContatos();
-  }
-
-  void _inicializarContatos() {
-    // Adiciona um contato padrão
-    _listaContatos.adicionarContato(Contato(
-      nome: "Jhonatan",
-      telefone: "(67) 99622-8134",
-      email: "jhonatanpantaroto@gmail.com",
-    ));
+  Future<void> removerContato(int id) async {
+    await _contatoDatabase.removerContato(id);
   }
 }

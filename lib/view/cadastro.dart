@@ -23,11 +23,20 @@ class _CadastroState extends State<Cadastro> {
   void initState() {
     super.initState();
     if (widget.index != null) {
-      var contato = widget.controller.getContatos()[widget.index!];
+      // Chamar do bd
+      _carregarContato(widget.index!);
+    }
+  }
+
+  Future<void> _carregarContato(int index) async {
+    List<Contato> contatos = await widget.controller.getContatos();
+    var contato = contatos[index];
+
+    setState(() {
       _nomeController.text = contato.nome;
       _telefoneController.text = contato.telefone;
       _emailController.text = contato.email;
-    }
+    });
   }
 
   @override
@@ -39,8 +48,8 @@ class _CadastroState extends State<Cadastro> {
           if (widget.index != null)
             IconButton(
               icon: Icon(Icons.delete),
-              onPressed: () {
-                widget.controller.removerContato(widget.index!);
+              onPressed: () async {
+                await widget.controller.removerContato(widget.index!);
                 Navigator.pop(context);
               },
             ),
@@ -89,10 +98,10 @@ class _CadastroState extends State<Cadastro> {
               ),
               SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     if (widget.index == null) {
-                      widget.controller.adicionarContato(
+                      await widget.controller.adicionarContato(
                         Contato(
                           nome: _nomeController.text,
                           telefone: _telefoneController.text,
@@ -100,9 +109,9 @@ class _CadastroState extends State<Cadastro> {
                         ),
                       );
                     } else {
-                      widget.controller.editarContato(
-                        widget.index!,
+                      await widget.controller.editarContato(
                         Contato(
+                          id: widget.index,
                           nome: _nomeController.text,
                           telefone: _telefoneController.text,
                           email: _emailController.text,
